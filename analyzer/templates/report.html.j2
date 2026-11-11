@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sales report: {{ a.source_name }}</title>
+<style>
+  :root { --fg: #1d2329; --muted: #5d6670; --line: #dde2e6; --accent: #2a6f97; }
+  body { font: 15px/1.5 system-ui, sans-serif; color: var(--fg); margin: 0; background: #fff; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .meta, .note { color: var(--muted); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 20px; }
+  .kpi { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .kpi .label { color: var(--muted); font-size: 13px; }
+  .kpi .value { font-size: 22px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  ul { padding-left: 20px; }
+  .scroll { overflow-x: auto; }
+</style>
+<script>{{ plotly_js | safe }}</script>
+</head>
+<body>
+<main>
+  <h1>Sales report</h1>
+  <p class="meta">
+    Source: {{ a.source_name }} · {{ a.cleaning.rows_out }} rows analysed
+    {%- if k.first_date %} · {{ k.first_date.date() }} to {{ k.last_date.date() }}{% endif %}
+    · generated {{ generated }}
+  </p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="label">Revenue</div><div class="value">{{ "{:,.2f}".format(k.revenue) }}</div></div>
+    <div class="kpi"><div class="label">Orders</div><div class="value">{{ "{:,}".format(k.orders) }}</div></div>
+    <div class="kpi"><div class="label">Average order value</div><div class="value">{{ fmt(k.average_order_value) }}</div></div>
+    <div class="kpi"><div class="label">Unique customers</div><div class="value">{{ k.unique_customers if k.unique_customers is not none else "n/a" }}</div></div>
+    <div class="kpi"><div class="label">Repeat customer rate</div><div class="value">{{ pct(k.repeat_customer_rate) }}</div></div>
+  </div>
+  {% if k.notes %}<ul class="note">{% for n in k.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+
+  <h2>Trends</h2>
+  {{ charts.monthly | safe }}
+
+  <h2>Breakdown</h2>
+  <div class="grid">
+    <div>{{ charts.products | safe }}</div>
+    <div>{{ charts.customers | safe }}</div>
+    <div>{{ charts.regions | safe }}</div>
+    <div>{{ charts.distribution | safe }}</div>
+  </div>
+
+  <h2>Monthly figures</h2>
+  <div class="scroll">{{ tables.monthly | safe }}</div>
+
+  <h2>Top products</h2>
+  <div class="scroll">{{ tables.products | safe }}</div>
+
+  <h2>Data quality</h2>
+  <ul>{% for line in a.cleaning.summary() %}<li>{{ line }}</li>{% else %}<li>No changes were needed.</li>{% endfor %}</ul>
+  <div class="grid">
+    <div class="scroll"><h3>Missing values</h3>{{ tables.missing | safe }}</div>
+    <div class="scroll"><h3>Outliers (IQR rule)</h3>{{ tables.outliers | safe }}</div>
+  </div>
+  <div class="scroll"><h3>Numeric columns</h3>{{ tables.numeric | safe }}</div>
+</main>
+</body>
+</html>

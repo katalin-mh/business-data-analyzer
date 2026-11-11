@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["analyzer"]
+
+[tool.setuptools.package-data]
+analyzer = ["templates/*.j2"]
+
+[project]
+name = "business-data-analyzer"
+version = "0.1.0"
+description = "Clean, analyse and report on sales data from CSV and Excel files."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2",
+    "openpyxl>=3.1",
+    "duckdb>=1.1",
+    "plotly>=5.24",
+    "streamlit>=1.40",
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11", "pandas-stubs", "types-openpyxl"]
+
+[project.scripts]
+analyzer = "analyzer.cli:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM", "PD"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ["build/"]
+
+[[tool.mypy.overrides]]
+module = ["plotly.*", "duckdb.*", "streamlit.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

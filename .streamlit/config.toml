@@ -1,0 +1,17 @@
+[server]
+# Matches the 50 MB limit enforced in analyzer/loading.py.
+maxUploadSize = 50
+enableXsrfProtection = true
+
+[client]
+# Don't show Python tracebacks (with server paths) to users. Expected problems
+# are shown as friendly messages by the app itself.
+showErrorDetails = "none"
+toolbarMode = "viewer"
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#2a6f97"
