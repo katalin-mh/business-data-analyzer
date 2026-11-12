@@ -81,7 +81,7 @@ Users can type SQL, so `sql.py` treats it as untrusted:
 1. **Query text of at most 10,000 characters.**
 2. **One statement, and only `SELECT`.** DuckDB's own parser (`extract_statements`) checks this, not a regex, so tricks with comments or semicolons don't work.
 3. **A fresh in-memory database per query** that holds only the user's table.
-4. **No external access.** `enable_external_access = false`, extension auto-install and auto-load are off, and the home and secret directories are set to neutral values, so `duckdb_settings()` doesn't reveal server paths.
+4. **No external access.** `enable_external_access = false`, extension auto-install and auto-load are off, and the home, secret and temp directories are set to neutral values, so `duckdb_settings()` doesn't reveal server paths. External access is switched off right after connecting rather than in the startup config: set at startup, DuckDB lists the working directory in `allowed_paths`, which any query can read (CI on Linux caught this; the Windows run missed it because of the path separators, and the test now checks both).
 5. **`lock_configuration = true`.** A query can't switch any of that back on.
 6. **Resource limits:**
    - 256 MB of memory, 2 threads, and no spilling to disk.

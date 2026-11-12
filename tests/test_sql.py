@@ -67,9 +67,8 @@ def test_row_limit_flags_truncation() -> None:
 
 def test_slow_query_times_out() -> None:
     with pytest.raises(QueryError, match="longer than"):
-        run_query(
-            DATA, "SELECT COUNT(*) FROM range(1000000000) a, range(1000000000) b", timeout_s=0.5
-        )
+        # Streams with constant memory, so only the time limit can stop it.
+        run_query(DATA, "SELECT SUM(hash(range)) FROM range(1000000000000)", timeout_s=0.5)
 
 
 def test_syntax_errors_are_reported() -> None:

@@ -115,8 +115,14 @@ def test_sql_query_length_is_capped() -> None:
 
 def test_sql_does_not_reveal_server_paths() -> None:
     settings = run_query(DATA, "SELECT name, value FROM duckdb_settings()").rows
-    home = str(Path.home())
-    assert not settings["value"].astype(str).str.contains(home, regex=False).any()
+    values = settings["value"].astype(str).str.replace("\\", "/")
+    # DuckDB prints paths with forward slashes, also on Windows.
+    for path in (Path.home(), Path.cwd()):
+        leaked = settings["name"][values.str.contains(path.as_posix(), regex=False)]
+        assert leaked.empty, f"settings reveal {path}: {list(leaked)}"
+    # External access is switched off after connecting; make sure it really is.
+    access = settings.loc[settings["name"] == "enable_external_access", "value"].iloc[0]
+    assert str(access).lower() == "false"
 
 
 def test_sql_does_not_install_extensions() -> None:

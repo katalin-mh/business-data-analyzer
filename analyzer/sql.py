@@ -27,14 +27,17 @@ DEFAULT_TIMEOUT_S = 5.0
 MAX_QUERY_CHARS = 10_000
 FETCH_CHUNK = 100
 
+# External access is switched off right after connecting (see run_query), not here:
+# disabling it at startup makes DuckDB list the working directory in its
+# `allowed_paths` setting, which any query could read through duckdb_settings().
 CONFIG: dict[str, str | bool | int | float | list[str]] = {
-    "enable_external_access": False,
     "autoinstall_known_extensions": False,
     "autoload_known_extensions": False,
     "allow_community_extensions": False,
     "memory_limit": "256MB",
     "threads": 2,
     "max_temp_directory_size": "0B",  # no spilling to disk
+    "temp_directory": "",  # otherwise listed, with its full path, in allowed_directories
     # Neutral values, so duckdb_settings() doesn't reveal the server's home directory.
     "secret_directory": "secrets-disabled",
     "home_directory": "home-disabled",
@@ -86,6 +89,7 @@ def run_query(
     con = duckdb.connect(":memory:", config=CONFIG)
     timer = threading.Timer(timeout_s, con.interrupt)
     try:
+        con.execute("SET enable_external_access = false")
         con.register(TABLE, df)
         con.execute("SET lock_configuration = true")
         timer.start()
